@@ -25,11 +25,14 @@ class Info(API):
         # the original dex.
         perp_dexs: Optional[List[str]] = None,
         timeout: Optional[float] = None,
+        ws_base_url: Optional[str] = None,
     ):  # pylint: disable=too-many-locals
         super().__init__(base_url, timeout)
         self.ws_manager: Optional[WebsocketManager] = None
         if not skip_ws:
-            self.ws_manager = WebsocketManager(self.base_url)
+            # Use ws_base_url if provided, otherwise fallback to base_url
+            ws_url = ws_base_url or self.base_url
+            self.ws_manager = WebsocketManager(ws_url)
             self.ws_manager.start()
 
         if spot_meta is None:
@@ -746,6 +749,9 @@ class Info(API):
             events with timestamps, transaction hashes, and detailed delta information.
         """
         return self.post("/info", {"type": "delegatorHistory", "user": user})
+
+    def query_spot_deploy_auction_status(self, user: str) -> Any:
+        return self.post("/info", {"type": "spotDeployState", "user": user})
 
     def _remap_coin_subscription(self, subscription: Subscription) -> None:
         if (
